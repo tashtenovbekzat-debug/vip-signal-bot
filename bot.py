@@ -1,7 +1,7 @@
 import telebot
 
-TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_БОТА"
-bot = telebot.TeleBot(TOKEN)
+TOKEN = "8492510753:AAF34ckhpjbuZnW2f5JHMCx-TOeqfwdQ8Z4
+bot = telebot.TeleBot(TOKEN)"
 
 VIP_CHANNEL = "@alphagoldvip_channel"  # сюда потом поставим твой канал
 ADMIN_ID = 123456789  # сюда потом поставим твой telegram id
