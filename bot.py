@@ -5,7 +5,7 @@ TOKEN = "8492510753:AAHK9aIoguNGa6CJMUr2XrXad04Vwk_uF28"
 bot = telebot.TeleBot(TOKEN)
 
 VIP_CHANNEL = "@alphagold_elite_signal"
-ADMIN_ID = 123456789  # сюда потом поставим твой ID
+ADMIN_ID = 8394704301  # сюда потом поставим твой ID
 
 # старт
 @bot.message_handler(commands=['start'])
