@@ -1,8 +1,8 @@
 import os
 import telebot
 
-TOKEN = os.getenv("8492510753:AAF34ckhpjbuZnW2f5JHMCx-TOeqfwdQ8Z4")
-
+TOKEN = os.getenv
+8492510753:AAF34ckhpjbuZnW2f5JHMCx-TOeqfwdQ8Z4
 # Проверка токена
 if not TOKEN or ":" not in TOKEN:
     raise ValueError("BOT_TOKEN is missing or invalid (must contain ':')")
