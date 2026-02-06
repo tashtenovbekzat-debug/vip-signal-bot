@@ -12,10 +12,24 @@ def start(message):
     "🔥 VIP GOLD SIGNAL BOT 🔥\n\n"
     "Добро пожаловать в VIP сигналы.\n"
     "Для доступа нужна оплата.\n\n"
-    "После оплаты бот откроет доступ.")
+    "После оплаты бот автоматически откроет доступ.")
 
 @bot.message_handler(commands=['id'])
 def get_id(message):
     bot.send_message(message.chat.id, f"Твой ID: {message.from_user.id}")
 
-bot.polling()
+@bot.message_handler(commands=['give'])
+def give_access(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "Ты не админ ❌")
+        return
+
+    try:
+        user_id = message.text.split()[1]
+        link = bot.create_chat_invite_link(VIP_CHANNEL, member_limit=1)
+        bot.send_message(user_id, f"Оплата получена ✅\nВот доступ в VIP:\n{link.invite_link}")
+        bot.send_message(message.chat.id, "Пользователь добавлен в VIP ✅")
+    except:
+        bot.send_message(message.chat.id, "Ошибка. Пиши: /give ID")
+
+bot.polling(none_stop=True)
