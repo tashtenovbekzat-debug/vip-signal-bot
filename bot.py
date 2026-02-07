@@ -1,83 +1,93 @@
 import os
 import telebot
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
-def must_env(name: str) -> str:
-    v = os.getenv(name, "").strip()
-    if not v:
-        raise ValueError(f"{name} is not set")
-    return v
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU").strip()
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN не установлен")
 
-BOT_TOKEN = must_env("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU")
-ADMIN_ID = int(must_en"8394704301")
+ADMIN_ID = 8394704301
+
+VIP_LINK = "https://t.me/+9CHxKiRNxu41NWJk"
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
-WELCOME_TEXT = (
-    "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
-    "Добро пожаловать в VIP.\n"
-    "Для доступа нужна оплата.\n\n"
-    "✅ Узнать свой ID: /id\n"
-    "✍️ Напиши любое сообщение — я отправлю заявку админу."
-)
+# ===== КНОПКИ =====
+def main_buttons():
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(KeyboardButton("💰 Цена VIP"))
+    kb.add(KeyboardButton("✅ Я оплатил"))
+    kb.add(KeyboardButton("🆔 Мой ID"))
+    return kb
+
 
 @bot.message_handler(commands=["start"])
 def start(m):
-    bot.send_message(m.chat.id, WELCOME_TEXT)
+    bot.send_message(
+        m.chat.id,
+        "🔥 <b>ALPHA GOLD VIP</b> 🔥\n\n"
+        "Добро пожаловать в VIP сигналы 📈\n"
+        "Выбери действие ниже:",
+        reply_markup=main_buttons()
+    )
 
-@bot.message_handler(commands=["ping"])
-def ping(m):
-    bot.reply_to(m, "pong ✅")
 
-@bot.message_handler(commands=["id"])
-def get_id(m):
-    bot.send_message(m.chat.id, f"Твой ID: <code>{m.from_user.id}</code>")
+@bot.message_handler(func=lambda m: m.text == "💰 Цена VIP")
+def price(m):
+    bot.send_message(
+        m.chat.id,
+        "💎 <b>VIP доступ:</b>\n\n"
+        "1 месяц — 200$\n"
+        "3 месяца — 500$\n\n"
+        "После оплаты нажми: ✅ Я оплатил"
+    )
 
-# Админ подтверждает заявку (просто отметка)
+
+@bot.message_handler(func=lambda m: m.text == "🆔 Мой ID")
+def myid(m):
+    bot.send_message(m.chat.id, f"Твой ID:\n<code>{m.from_user.id}</code>")
+
+
+@bot.message_handler(func=lambda m: m.text == "✅ Я оплатил")
+def paid(m):
+    user_id = m.from_user.id
+    username = m.from_user.username or "-"
+
+    text = (
+        "💸 <b>Новая оплата</b>\n\n"
+        f"ID: <code>{user_id}</code>\n"
+        f"Username: @{username}\n\n"
+        f"Подтвердить:\n"
+        f"/ok {user_id}"
+    )
+
+    bot.send_message(ADMIN_ID, text)
+    bot.send_message(m.chat.id, "⏳ Отправлено админу. Ожидай доступ.")
+
+
 @bot.message_handler(commands=["ok"])
 def ok(m):
     if m.from_user.id != ADMIN_ID:
-        bot.reply_to(m, "Ты не админ ❌")
         return
 
     parts = m.text.split()
     if len(parts) < 2:
-        bot.reply_to(m, "Пиши так: <code>/ok 123456789</code>")
+        bot.reply_to(m, "Пиши так:\n/ok 123456789")
         return
 
     user_id = int(parts[1])
-    try:
-        bot.send_message(user_id, "✅ Оплата подтверждена. Админ скоро добавит тебя в VIP.")
-        bot.reply_to(m, f"Готово ✅ Я сообщил пользователю {user_id}")
-    except Exception as e:
-        bot.reply_to(m, f"Не смог написать пользователю. Он должен нажать /start.\nОшибка: {e}")
-
-# Любое сообщение от пользователя = заявка админу
-@bot.message_handler(func=lambda m: True)
-def application(m):
-    user_id = m.from_user.id
-    username = m.from_user.username or "-"
-    name = (m.from_user.first_name or "") + (" " + m.from_user.last_name if m.from_user.last_name else "")
-    text = (
-        "🆕 <b>Заявка в VIP</b>\n"
-        f"ID: <code>{user_id}</code>\n"
-        f"Username: @{username}\n"
-        f"Имя: {name.strip() if name.strip() else '-'}\n\n"
-        f"Сообщение: {m.text}\n\n"
-        f"Команда подтверждения: <code>/ok {user_id}</code>"
-    )
 
     try:
-        bot.send_message(ADMIN_ID, text)
-    except Exception:
-        pass
+        bot.send_message(
+            user_id,
+            "🎉 <b>Оплата подтверждена!</b>\n\n"
+            "Вот доступ в VIP канал:\n"
+            f"{VIP_LINK}"
+        )
+        bot.reply_to(m, "Пользователь получил доступ ✅")
+    except:
+        bot.reply_to(m, "Он не нажал /start")
 
-    bot.reply_to(m, "✅ Заявка отправлена админу. Ожидай ответ.")
 
-if __name__ == "__main__":
-    # Пинг админу при старте (чтобы видеть что бот жив)
-    try:
-        bot.send_message(ADMIN_ID, "✅ Бот запущен и работает.")
-    except Exception:
-        pass
-
-    bot.infinity_polling(timeout=60, long_polling_timeout=60)
+print("BOT STARTED")
+bot.infinity_polling()
