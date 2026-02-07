@@ -10,7 +10,7 @@ def must_env(name: str) -> str:
 
 BOT_TOKEN = must_env"8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU"
 ADMIN_ID = int(must_enc"8394704301")
-VIP_CHANNEL = must_env("-1003735072360")  # должно быть -100xxxxxxxxxx
+VIP_CHANNEL = must_env"-1003735072360"  # должно быть -100xxxxxxxxxx
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
