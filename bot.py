@@ -8,7 +8,7 @@ def must_env(name: str) -> str:
     return v
 
 BOT_TOKEN = must_env("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU")
-ADMIN_ID = int(must_env("8394704301"))
+ADMIN_ID = int(must_en"8394704301")
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
