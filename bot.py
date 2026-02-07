@@ -1,11 +1,11 @@
 import os
 import telebot
 
-TOKEN = os.getenv"8492510753:AAEQLPiBJUPPxvzq1462LAIH856L7DHLC1U"strip()
+TOKEN = os.getenv("BOT_TOKEN", "8492510753:AAGesCCRSWAQe9hvYwBRgRhOxGqY3D5YxGA").strip()
 if not TOKEN:
     raise ValueError("BOT_TOKEN is not set")
 
-ADMIN_ID = os.getenv("ADMIN_ID", "").strip()
+ADMIN_ID = os.getenv("ADMIN_ID", "8394704301").strip()
 if not ADMIN_ID:
     raise ValueError("ADMIN_ID is not set")
 ADMIN_ID = int(ADMIN_ID)
