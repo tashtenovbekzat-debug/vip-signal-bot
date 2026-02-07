@@ -1,96 +1,83 @@
 import os
 import telebot
-from telebot.apihelper import ApiTelegramException
 
 def must_env(name: str) -> str:
-    val = os.getenv(name, "").strip()
-    if not val:
-        raise ValueError(f"{name} is not set (Railway Variables)")
-    return val
+    v = os.getenv(name, "").strip()
+    if not v:
+        raise ValueError(f"{name} is not set")
+    return v
 
-BOT_TOKEN = must_env"8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU"
-ADMIN_ID = intmust "8394704301"
-VIP_CHANNEL = must_env"-1003735072360"  # должно быть -100xxxxxxxxxx
+BOT_TOKEN = must_env("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU")
+ADMIN_ID = int(must_env("8394704301"))
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
+WELCOME_TEXT = (
+    "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
+    "Добро пожаловать в VIP.\n"
+    "Для доступа нужна оплата.\n\n"
+    "✅ Узнать свой ID: /id\n"
+    "✍️ Напиши любое сообщение — я отправлю заявку админу."
+)
 
-def notify_admin(text: str):
+@bot.message_handler(commands=["start"])
+def start(m):
+    bot.send_message(m.chat.id, WELCOME_TEXT)
+
+@bot.message_handler(commands=["ping"])
+def ping(m):
+    bot.reply_to(m, "pong ✅")
+
+@bot.message_handler(commands=["id"])
+def get_id(m):
+    bot.send_message(m.chat.id, f"Твой ID: <code>{m.from_user.id}</code>")
+
+# Админ подтверждает заявку (просто отметка)
+@bot.message_handler(commands=["ok"])
+def ok(m):
+    if m.from_user.id != ADMIN_ID:
+        bot.reply_to(m, "Ты не админ ❌")
+        return
+
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.reply_to(m, "Пиши так: <code>/ok 123456789</code>")
+        return
+
+    user_id = int(parts[1])
+    try:
+        bot.send_message(user_id, "✅ Оплата подтверждена. Админ скоро добавит тебя в VIP.")
+        bot.reply_to(m, f"Готово ✅ Я сообщил пользователю {user_id}")
+    except Exception as e:
+        bot.reply_to(m, f"Не смог написать пользователю. Он должен нажать /start.\nОшибка: {e}")
+
+# Любое сообщение от пользователя = заявка админу
+@bot.message_handler(func=lambda m: True)
+def application(m):
+    user_id = m.from_user.id
+    username = m.from_user.username or "-"
+    name = (m.from_user.first_name or "") + (" " + m.from_user.last_name if m.from_user.last_name else "")
+    text = (
+        "🆕 <b>Заявка в VIP</b>\n"
+        f"ID: <code>{user_id}</code>\n"
+        f"Username: @{username}\n"
+        f"Имя: {name.strip() if name.strip() else '-'}\n\n"
+        f"Сообщение: {m.text}\n\n"
+        f"Команда подтверждения: <code>/ok {user_id}</code>"
+    )
+
     try:
         bot.send_message(ADMIN_ID, text)
     except Exception:
         pass
 
-
-@bot.message_handler(commands=["start"])
-def start(message):
-    bot.send_message(
-        message.chat.id,
-        "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
-        "Доступ в VIP канал платный. Напиши администратору.\n\n"
-        "Команды:\n"
-        "• /id — узнать свой ID\n"
-        "• /ping — проверить бота"
-    )
-
-
-@bot.message_handler(commands=["ping"])
-def ping(message):
-    bot.reply_to(message, "pong ✅")
-
-
-@bot.message_handler(commands=["id"])
-def get_id(message):
-    bot.send_message(message.chat.id, f"Твой ID: <code>{message.from_user.id}</code>")
-
-
-@bot.message_handler(commands=["give"])
-def give_access(message):
-    if message.from_user.id != ADMIN_ID:
-        bot.reply_to(message, "Ты не админ ❌")
-        return
-
-    parts = message.text.split()
-    if len(parts) < 2:
-        bot.reply_to(message, "Пиши так: <code>/give 123456789</code>")
-        return
-
-    try:
-        user_id = int(parts[1])
-
-        # создаём одноразовую ссылку
-        link = bot.create_chat_invite_link(
-            chat_id=VIP_CHANNEL,
-            member_limit=1
-        )
-
-        bot.send_message(
-            user_id,
-            "✅ Оплата подтверждена.\n"
-            "Вот одноразовая ссылка в VIP канал:\n"
-            f"{link.invite_link}"
-        )
-        bot.reply_to(message, f"Готово ✅ Ссылка отправлена пользователю {user_id}")
-
-    except ApiTelegramException as e:
-        # самые частые ошибки разжёвываем
-        msg = str(e)
-        if "chat not found" in msg:
-            bot.reply_to(message,
-                "❌ chat not found.\n"
-                "Проверь VIP_CHANNEL (должен быть -100xxxxxxxxxx) и что бот добавлен админом в канал."
-            )
-        elif "not enough rights" in msg or "CHAT_ADMIN_REQUIRED" in msg:
-            bot.reply_to(message,
-                "❌ У бота нет прав.\n"
-                "Сделай бота админом в канале и включи право 'Invite Users / Add Users'."
-            )
-        else:
-            bot.reply_to(message, f"❌ Ошибка Telegram: {e}")
-    except Exception as e:
-        bot.reply_to(message, f"❌ Ошибка: {e}")
-
+    bot.reply_to(m, "✅ Заявка отправлена админу. Ожидай ответ.")
 
 if __name__ == "__main__":
-    notify_admin("✅ Бот запустился и в сети.")
+    # Пинг админу при старте (чтобы видеть что бот жив)
+    try:
+        bot.send_message(ADMIN_ID, "✅ Бот запущен и работает.")
+    except Exception:
+        pass
+
     bot.infinity_polling(timeout=60, long_polling_timeout=60)
