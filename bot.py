@@ -4,7 +4,7 @@ import telebot
 # BOT_TOKEN ставишь ТОЛЬКО в Railway Variables (не в код)
 TOKEN = os.getenv("8492510753:AAG-4CI8R-40J5HhYUCe4SZjbcbgnUxRixM", "").strip()
 if not TOKEN:
-    raise ValueError("BOT_TOKEN is not set")
+    raise ValueError("8492510753:AAG-4CI8R-40J5HhYUCe4SZjbcbgnUxRixM")
 
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
