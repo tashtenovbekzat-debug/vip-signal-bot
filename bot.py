@@ -1,28 +1,53 @@
 import os
 import telebot
 
-TOKEN = os.getenv("BOT_TOKEN", "8492510753:AAGesCCRSWAQe9hvYwBRgRhOxGqY3D5YxGA").strip()
-if not TOKEN:
-    raise ValueError("BOT_TOKEN is not set")
+TOKEN = os.getenv("8492510753:AAGesCCRSWAQe9hvYwBRgRhOxGqY3D5YxGA")
+ADMIN_ID = 8394704301
+VIP_CHANNEL = -1003735072360
 
-ADMIN_ID = os.getenv("ADMIN_ID", "8394704301").strip()
-if not ADMIN_ID:
-    raise ValueError("ADMIN_ID is not set")
-ADMIN_ID = int(ADMIN_ID)
+bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
-bot = telebot.TeleBot(TOKEN)
 
-# 1) Когда в канале появится пост — бот поймает его и пришлёт тебе chat.id
-@bot.channel_post_handler(func=lambda m: True)
-def catch_channel_post(message):
-    chat_id = message.chat.id
-    title = message.chat.title
-    bot.send_message(ADMIN_ID, f"✅ Channel detected!\nTitle: {title}\nVIP_CHANNEL = {chat_id}")
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.send_message(
+        message.chat.id,
+        "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
+        "Добро пожаловать в VIP сигналы.\n"
+        "Доступ в VIP канал платный.\n"
+        "После оплаты админ выдаст доступ.\n\n"
+        "Отправь /id чтобы узнать свой ID"
+    )
 
-# 2) Команда для проверки что бот жив
-@bot.message_handler(commands=["ping"])
-def ping(message):
-    bot.reply_to(message, "pong ✅")
 
-if __name__ == "__main__":
-    bot.infinity_polling(timeout=60, long_polling_timeout=60)
+@bot.message_handler(commands=["id"])
+def get_id(message):
+    bot.send_message(message.chat.id, f"Твой ID: <code>{message.from_user.id}</code>")
+
+
+@bot.message_handler(commands=["give"])
+def give_access(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "Ты не админ ❌")
+        return
+
+    try:
+        user_id = int(message.text.split()[1])
+
+        link = bot.create_chat_invite_link(
+            chat_id=VIP_CHANNEL,
+            member_limit=1
+        )
+
+        bot.send_message(
+            user_id,
+            f"✅ Оплата получена!\nВот доступ в VIP канал:\n{link.invite_link}"
+        )
+
+        bot.send_message(message.chat.id, "Готово. Пользователь добавлен ✅")
+
+    except:
+        bot.send_message(message.chat.id, "Ошибка. Пиши так: /give 123456789")
+
+
+bot.infinity_polling()
