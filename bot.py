@@ -1,113 +1,122 @@
+import os
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
-# ВСТАВЬ СЮДА СВОЙ BOT TOKEN
-BOT_TOKEN = "8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU"
+# ====== НАСТРОЙКИ (токен только в Railway Variables) ======
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU").strip()
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN is not set in Railway Variables")
 
-# ТВОЙ TELEGRAM ID (АДМИН)
-ADMIN_ID = 8394704301
+ADMIN_ID = 8394704301  # твой Telegram ID (админ)
+VIP_CHANNEL = -1003735072360  # твой VIP канал (chat_id)
 
-# ТВОЙ VIP КАНАЛ (ссылка)
-VIP_LINK = "https://t.me/+9CHxKiRNxu41NWJk"
-
-# USDT TRC20 адрес
-TRC20_ADDRESS = "TNAUbEavtKGw9DCEAUoM76cRUyDQkBEj8j"
-
-# ЦЕНЫ
-PRICE_1M = "200$"
-PRICE_3M = "500$"
+PRICE_TEXT = (
+    "💎 VIP доступ:\n\n"
+    "1 месяц — 200$\n"
+    "3 месяца — 500$\n\n"
+    "После оплаты нажми: ✅ Я оплатил"
+)
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
-user_state = {}
-user_plan = {}
 
-def menu():
-    kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton("💰 Оплатить USDT", callback_data="pay"))
-    kb.add(InlineKeyboardButton("✅ Я оплатил", callback_data="paid"))
-    kb.add(InlineKeyboardButton("🆔 Мой ID", callback_data="id"))
+def main_menu():
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(KeyboardButton("💰 Цена VIP"))
+    kb.add(KeyboardButton("✅ Я оплатил"))
+    kb.add(KeyboardButton("🆔 Мой ID"))
     return kb
 
-def planmenu():
-    kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton("1 месяц — 200$", callback_data="1m"))
-    kb.add(InlineKeyboardButton("3 месяца — 500$", callback_data="3m"))
-    return kb
 
-@bot.message_handler(commands=['start'])
-def start(msg):
-    bot.send_message(msg.chat.id,
-    "🔥 <b>ALPHA GOLD VIP</b>\n\n"
-    "Точные VIP сигналы.\n"
-    "Нажми оплатить чтобы получить доступ.",
-    reply_markup=menu())
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.send_message(
+        message.chat.id,
+        "🔥 <b>ALPHA GOLD VIP</b> 🔥\n\n"
+        "Добро пожаловать в VIP сигналы 📈\n"
+        "Выбери действие ниже:",
+        reply_markup=main_menu()
+    )
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback(call):
-    uid = call.from_user.id
 
-    if call.data == "id":
-        bot.send_message(uid, f"Твой ID: <code>{uid}</code>")
+@bot.message_handler(commands=["ping"])
+def ping(message):
+    bot.reply_to(message, "pong ✅ Бот работает")
 
-    if call.data == "pay":
-        bot.send_message(uid,
-        f"💰 <b>Оплата USDT TRC20</b>\n\n"
-        f"Адрес:\n<code>{TRC20_ADDRESS}</code>\n\n"
-        f"1 месяц — {PRICE_1M}\n"
-        f"3 месяца — {PRICE_3M}\n\n"
-        "Выбери тариф:",
-        reply_markup=planmenu())
 
-    if call.data == "1m":
-        user_plan[uid] = "1 месяц 200$"
-        bot.send_message(uid,"После оплаты нажми: ✅ Я оплатил")
+@bot.message_handler(commands=["id"])
+def cmd_id(message):
+    bot.send_message(message.chat.id, f"Твой ID: <code>{message.from_user.id}</code>")
 
-    if call.data == "3m":
-        user_plan[uid] = "3 месяца 500$"
-        bot.send_message(uid,"После оплаты нажми: ✅ Я оплатил")
 
-    if call.data == "paid":
-        user_state[uid] = "wait"
-        bot.send_message(uid,"Отправь TXID или скрин оплаты сюда.")
+@bot.message_handler(func=lambda m: m.text == "🆔 Мой ID")
+def btn_id(message):
+    cmd_id(message)
 
-@bot.message_handler(content_types=['text','photo'])
-def proof(msg):
-    uid = msg.from_user.id
 
-    if user_state.get(uid) != "wait":
+@bot.message_handler(func=lambda m: m.text == "💰 Цена VIP")
+def btn_price(message):
+    bot.send_message(message.chat.id, PRICE_TEXT)
+
+
+@bot.message_handler(func=lambda m: m.text == "✅ Я оплатил")
+def btn_paid(message):
+    user_id = message.from_user.id
+    username = message.from_user.username or "-"
+
+    text = (
+        "💸 <b>Новая оплата</b>\n\n"
+        f"ID: <code>{user_id}</code>\n"
+        f"Username: @{username}\n\n"
+        f"Подтвердить:\n<code>/ok {user_id}</code>"
+    )
+
+    # 1) Пишем админу в ЛИЧКУ (это тебе)
+    bot.send_message(ADMIN_ID, text)
+
+    # 2) (необязательно) Пишем в канал — только если бот админ и имеет право постить
+    try:
+        bot.send_message(VIP_CHANNEL, f"Заявка на доступ от <code>{user_id}</code> (@{username})")
+    except Exception:
+        pass
+
+    bot.send_message(message.chat.id, "⏳ Отправлено админу. Ожидай доступ.")
+
+
+@bot.message_handler(commands=["ok"])
+def approve(message):
+    # Только админ подтверждает
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "Ты не админ ❌")
         return
 
-    user_state[uid] = "done"
-
-    username = msg.from_user.username
-    plan = user_plan.get(uid,"не выбрал")
-
-    bot.send_message(ADMIN_ID,
-    f"💸 НОВАЯ ОПЛАТА\n\n"
-    f"ID: {uid}\n"
-    f"User: @{username}\n"
-    f"Тариф: {plan}\n\n"
-    f"Подтвердить доступ:\n"
-    f"/ok {uid}")
-
-    bot.forward_message(ADMIN_ID, msg.chat.id, msg.message_id)
-
-    bot.send_message(uid,"⏳ Отправлено админу. Жди подтверждения.")
-
-@bot.message_handler(commands=['ok'])
-def give(msg):
-    if msg.from_user.id != ADMIN_ID:
+    parts = message.text.split()
+    if len(parts) != 2:
+        bot.send_message(message.chat.id, "Пиши так: <code>/ok 123456789</code>")
         return
 
     try:
-        uid = int(msg.text.split()[1])
-        bot.send_message(uid,
-        f"✅ Оплата подтверждена!\n\n"
-        f"Вот доступ в VIP:\n{VIP_LINK}")
-        bot.send_message(msg.chat.id,"Готово. Пользователь добавлен.")
-    except:
-        bot.send_message(msg.chat.id,"Ошибка.")
+        user_id = int(parts[1])
 
-print("BOT STARTED")
-bot.infinity_polling()
+        # Создаём одноразовую ссылку в VIP канал
+        # ВАЖНО: бот должен быть админом в канале и иметь право "Manage invite links"
+        link = bot.create_chat_invite_link(
+            chat_id=VIP_CHANNEL,
+            member_limit=1
+        )
+
+        bot.send_message(
+            user_id,
+            "✅ Оплата подтверждена.\n"
+            "Вот ссылка в VIP канал (одноразовая):\n"
+            f"{link.invite_link}"
+        )
+
+        bot.send_message(message.chat.id, f"Готово ✅ Ссылка отправлена пользователю {user_id}")
+
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка: {e}")
+
+
+if __name__ == "__main__":
+    bot.infinity_polling(timeout=60, long_polling_timeout=60)
