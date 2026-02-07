@@ -1,12 +1,14 @@
 import telebot
 
+# ВСТАВЬ СЮДА СВОЙ BOT TOKEN
 TOKEN = "8492510753:AAHK9aIoguNGa6CJMUr2XrXad04Vwk_uF28"
+
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
-# твой канал
-VIP_CHANNEL = "@alphagold_elite_signal"
+# ВСТАВЬ СЮДА chat_id КАНАЛА ВИДА -100...
+VIP_CHANNEL = -1001234567890123
 
-# твой ID админа
+# ВСТАВЬ СЮДА СВОЙ TELEGRAM ID (у тебя: 8394704301)
 ADMIN_ID = 8394704301
 
 PRICE_TEXT = "Доступ в VIP канал платный. Напиши администратору."
@@ -19,7 +21,7 @@ def start(message):
         "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
         "Добро пожаловать в VIP сигналы.\n"
         f"{PRICE_TEXT}\n\n"
-        "Отправь /id чтобы узнать свой ID"
+        "Команда: /id",
     )
 
 
@@ -36,27 +38,27 @@ def give_access(message):
 
     parts = message.text.split()
     if len(parts) < 2:
-        bot.send_message(message.chat.id, "Пиши: /give ID")
+        bot.send_message(message.chat.id, "Пиши так: <code>/give 123456789</code>")
         return
 
-    user_id = int(parts[1])
-
     try:
-        link = bot.create_chat_invite_link(
-            chat_id=VIP_CHANNEL,
-            member_limit=1
-        )
+        user_id = int(parts[1])
+
+        # ВАЖНО: пользователь должен хотя бы 1 раз нажать /start вашему боту,
+        # иначе бот не сможет ему написать в личку.
+        link = bot.create_chat_invite_link(chat_id=VIP_CHANNEL, member_limit=1)
 
         bot.send_message(
             user_id,
-            f"✅ Оплата подтверждена!\nВот ссылка в VIP канал:\n{link.invite_link}"
+            "✅ Оплата подтверждена.\n"
+            "Вот одноразовая ссылка в VIP канал:\n"
+            f"{link.invite_link}"
         )
 
-        bot.send_message(message.chat.id, "Готово ✅")
+        bot.send_message(message.chat.id, f"Готово ✅ Ссылка отправлена пользователю {user_id}")
 
     except Exception as e:
         bot.send_message(message.chat.id, f"Ошибка: {e}")
 
 
-print("Бот запущен...")
-bot.infinity_polling()
+bot.infinity_polling(timeout=60, long_polling_timeout=60)
