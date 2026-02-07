@@ -1,7 +1,7 @@
 import os
 import telebot
 
-TOKEN = os.getenv"8492510753:AAEQLPiBJUPPxvzq1462LAIH856L7DHLC1Ustrip()
+TOKEN = os.getenv"8492510753:AAEQLPiBJUPPxvzq1462LAIH856L7DHLC1U"strip()
 if not TOKEN:
     raise ValueError("BOT_TOKEN is not set")
 
