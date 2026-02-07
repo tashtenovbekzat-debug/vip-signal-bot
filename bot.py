@@ -2,7 +2,7 @@ import os
 import telebot
 
 # ====== ТВОИ ДАННЫЕ ======
-BOT_TOKEN = os.getenv("8492510753")
+BOT_TOKEN = os.getenv("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU")
 ADMIN_ID = 8394704301   # твой Telegram ID
 VIP_CHANNEL = -1003735072360  # твой VIP канал
 
