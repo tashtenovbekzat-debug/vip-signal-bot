@@ -1,60 +1,28 @@
 import os
 import telebot
 
-TOKEN = os.getenv"8492510753:AAHK9aIoguNGa6CJMUr2XrXad04Vwk_uF28"
-bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
+TOKEN = os.getenv"8492510753:AAEQLPiBJUPPxvzq1462LAIH856L7DHLC1Ustrip()
+if not TOKEN:
+    raise ValueError("BOT_TOKEN is not set")
 
-VIP_CHANNEL = os.getenv("8394704301"
-ADMIN_ID = int(os.getenv"8394704301"
+ADMIN_ID = os.getenv("ADMIN_ID", "").strip()
+if not ADMIN_ID:
+    raise ValueError("ADMIN_ID is not set")
+ADMIN_ID = int(ADMIN_ID)
 
-PRICE_TEXT = "Доступ в VIP канал платный. Напиши администратору."
+bot = telebot.TeleBot(TOKEN)
 
+# 1) Когда в канале появится пост — бот поймает его и пришлёт тебе chat.id
+@bot.channel_post_handler(func=lambda m: True)
+def catch_channel_post(message):
+    chat_id = message.chat.id
+    title = message.chat.title
+    bot.send_message(ADMIN_ID, f"✅ Channel detected!\nTitle: {title}\nVIP_CHANNEL = {chat_id}")
 
-@bot.message_handler(commands=["start"])
-def start(message):
-    bot.send_message(
-        message.chat.id,
-        "🔥 VIP GOLD SIGNAL BOT 🔥\n\n"
-        "Добро пожаловать в VIP сигналы.\n"
-        f"{PRICE_TEXT}\n\n"
-        "Отправь /id чтобы узнать свой ID"
-    )
+# 2) Команда для проверки что бот жив
+@bot.message_handler(commands=["ping"])
+def ping(message):
+    bot.reply_to(message, "pong ✅")
 
-
-@bot.message_handler(commands=["id"])
-def get_id(message):
-    bot.send_message(message.chat.id, f"Твой ID: {message.from_user.id}")
-
-
-@bot.message_handler(commands=["give"])
-def give_access(message):
-    if message.from_user.id != ADMIN_ID:
-        bot.send_message(message.chat.id, "Ты не админ ❌")
-        return
-
-    parts = message.text.split()
-    if len(parts) < 2:
-        bot.send_message(message.chat.id, "Пиши: /give 123456789")
-        return
-
-    user_id = int(parts[1])
-
-    try:
-        link = bot.create_chat_invite_link(
-            chat_id=VIP_CHANNEL,
-            member_limit=1
-        )
-
-        bot.send_message(
-            user_id,
-            f"✅ Оплата подтверждена!\nВот ссылка в VIP канал:\n{link.invite_link}"
-        )
-
-        bot.send_message(message.chat.id, "Готово. Ссылка отправлена.")
-
-    except Exception as e:
-        bot.send_message(message.chat.id, f"Ошибка: {e}")
-
-
-print("BOT STARTED")
-bot.infinity_polling()
+if __name__ == "__main__":
+    bot.infinity_polling(timeout=60, long_polling_timeout=60)
