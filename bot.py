@@ -1,67 +1,59 @@
 import os
 import telebot
 
-TOKEN = os.getenv("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU", "").strip()
-if not TOKEN:
-    raise ValueError("BOT_TOKEN is not set")
+# ====== ТВОИ ДАННЫЕ ======
+BOT_TOKEN = os.getenv("8492510753")
+ADMIN_ID = 8394704301   # твой Telegram ID
+VIP_CHANNEL = -1003735072360  # твой VIP канал
 
-ADMIN_ID = int(os.getenv("ADMIN_ID", "8394704301").strip() or "0")
-if not ADMIN_ID:
-    raise ValueError("ADMIN_ID is not set")
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN не установлен в Railway")
 
-VIP_CHANNEL = os.getenv("VIP_CHANNEL", "-1003735072360").strip()
-if not VIP_CHANNEL:
-    raise ValueError("VIP_CHANNEL is not set")
-VIP_CHANNEL = int(VIP_CHANNEL)  # должен быть -100...
-
-PRICE_TEXT = os.getenv("PRICE_TEXT", "Для доступа нужна оплата. Напиши администратору.").strip()
-
-bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
+bot = telebot.TeleBot(BOT_TOKEN)
 
 
-@bot.message_handler(commands=["start"])
-def start(m):
-    bot.send_message(m.chat.id,
-                     "🔥 <b>VIP GOLD SIGNAL BOT</b> 🔥\n\n"
-                     "Добро пожаловать в VIP сигналы.\n"
-                     f"{PRICE_TEXT}\n\n"
-                     "Команды:\n"
-                     "• /id — узнать свой ID\n"
-                     "• /ping — проверка бота\n")
+# ===== Проверка жив ли бот =====
+@bot.message_handler(commands=['ping'])
+def ping(message):
+    bot.reply_to(message, "pong 🔥 Бот работает")
 
 
-@bot.message_handler(commands=["ping"])
-def ping(m):
-    bot.reply_to(m, "pong ✅")
+# ===== Когда человек пишет боту =====
+@bot.message_handler(func=lambda m: True)
+def get_user(message):
+    user_id = message.from_user.id
+    username = message.from_user.username
+
+    text = f"""
+🔥 Новый пользователь
+
+ID: {user_id}
+Username: @{username}
+"""
+
+    bot.send_message(ADMIN_ID, text)
+    bot.reply_to(message, "Админ скоро ответит ✅")
 
 
-@bot.message_handler(commands=["id"])
-def get_id(m):
-    bot.send_message(m.chat.id, f"Твой ID: <code>{m.from_user.id}</code>")
-
-
-@bot.message_handler(commands=["give"])
-def give(m):
-    if m.from_user.id != ADMIN_ID:
-        bot.send_message(m.chat.id, "Ты не админ ❌")
+# ===== Команда выдать доступ =====
+@bot.message_handler(commands=['give'])
+def give_access(message):
+    if message.from_user.id != ADMIN_ID:
         return
 
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.send_message(m.chat.id, "Пиши так: <code>/give 123456789</code>")
-        return
+    try:
+        user_id = int(message.text.split()[1])
 
-    user_id = int(parts[1])
+        link = bot.create_chat_invite_link(VIP_CHANNEL, member_limit=1)
 
-    link = bot.create_chat_invite_link(chat_id=VIP_CHANNEL, member_limit=1)
+        bot.send_message(user_id,
+        f"💎 Оплата получена!\nВот доступ в VIP канал:\n{link.invite_link}")
 
-    bot.send_message(user_id,
-                     "✅ Оплата подтверждена.\n"
-                     "Вот одноразовая ссылка в VIP канал:\n"
-                     f"{link.invite_link}")
+        bot.reply_to(message, "Пользователь добавлен в VIP ✅")
 
-    bot.send_message(m.chat.id, f"Готово ✅ Ссылка отправлена пользователю {user_id}")
+    except:
+        bot.reply_to(message, "Ошибка. Пиши:\n/give 123456789")
 
 
-if __name__ == "__main__":
-    bot.infinity_polling(timeout=60, long_polling_timeout=60)
+print("Бот запущен...")
+bot.infinity_polling()
