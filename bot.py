@@ -1,7 +1,7 @@
 import os
 import telebot
 
-TOKEN = os.getenv"8492510753:AAHK9aIoguNGa6CJMUr2XrXad04Vwk_uF28".strip()
+TOKEN = os.getenv("", "8492510753:AAHK9aIoguNGa6CJMUr2XrXad04Vwk_uF28").strip()
 if not TOKEN:
     raise ValueError("BOT_TOKEN is not set")
 
@@ -15,7 +15,7 @@ if not VIP_CHANNEL:
 ADMIN_ID = os.getenv("ADMIN_ID", "").strip()
 if not ADMIN_ID:
     raise ValueError("ADMIN_ID is not set")
-ADMIN_ID = int(ADMIN_ID)8394704301
+ADMIN_ID = int(ADMIN_ID)
 
 # (необязательно) цена/текст оплаты
 PRICE_TEXT = os.getenv("PRICE_TEXT", "Для доступа нужна оплата. Напиши администратору.").strip()
