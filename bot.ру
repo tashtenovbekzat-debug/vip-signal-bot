@@ -1,0 +1,163 @@
+import os
+import telebot
+from telebot.types import (
+    ReplyKeyboardMarkup, KeyboardButton,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
+
+# ====== TOKEN ИЗ RAILWAY ======
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("❌ BOT_TOKEN не найден в Railway Variables")
+
+ADMIN_ID = 8394704301
+VIP_CHANNEL = -1003735072360
+
+PRICE_TEXT = (
+    "💎 VIP доступ:\n\n"
+    "1 месяц — 200$\n"
+    "3 месяца — 500$\n\n"
+    "После оплаты нажми: ✅ Я оплатил"
+)
+
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
+
+pending_signals = {}
+
+# ====== МЕНЮ ======
+def main_menu():
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(KeyboardButton("💰 Цена VIP"))
+    kb.add(KeyboardButton("✅ Я оплатил"))
+    kb.add(KeyboardButton("🆔 Мой ID"))
+    kb.add(KeyboardButton("🧪 L1 Test Signal"))
+    return kb
+
+# ====== START ======
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.send_message(
+        message.chat.id,
+        "🔥 <b>ALPHA GOLD VIP</b> 🔥\n\n"
+        "Добро пожаловать в VIP сигналы 📈
+Выбери действие ниже:",
+        reply_markup=main_menu()
+    )
+
+# ====== PING ======
+@bot.message_handler(commands=["ping"])
+def ping(message):
+    bot.reply_to(message, "pong ✅ Бот работает")
+
+# ====== ID ======
+@bot.message_handler(func=lambda m: m.text == "🆔 Мой ID")
+def myid(message):
+    bot.send_message(message.chat.id, f"Твой ID: <code>{message.from_user.id}</code>")
+
+# ====== PRICE ======
+@bot.message_handler(func=lambda m: m.text == "💰 Цена VIP")
+def price(message):
+    bot.send_message(message.chat.id, PRICE_TEXT)
+
+# ====== Я ОПЛАТИЛ ======
+@bot.message_handler(func=lambda m: m.text == "✅ Я оплатил")
+def paid(message):
+    user_id = message.from_user.id
+    username = message.from_user.username or "-"
+
+    text = (
+        "💸 <b>Новая заявка (оплата)</b>\n\n"
+        f"ID: <code>{user_id}</code>\n"
+        f"Username: @{username}\n\n"
+        f"Подтвердить:\n<code>/ok {user_id}</code>"
+    )
+
+    bot.send_message(ADMIN_ID, text)
+
+    try:
+        bot.send_message(VIP_CHANNEL, f"Заявка на доступ от {user_id}")
+    except:
+        pass
+
+    bot.send_message(message.chat.id, "⏳ Отправлено админу. Ожидай доступ.")
+
+# ====== ПОДТВЕРЖДЕНИЕ ОПЛАТЫ ======
+@bot.message_handler(commands=["ok"])
+def approve(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "Ты не админ ❌")
+        return
+
+    parts = message.text.split()
+    if len(parts) != 2:
+        bot.send_message(message.chat.id, "Пиши: /ok ID")
+        return
+
+    user_id = int(parts[1])
+
+    link = bot.create_chat_invite_link(
+        chat_id=VIP_CHANNEL,
+        member_limit=1
+    )
+
+    bot.send_message(
+        user_id,
+        f"✅ Оплата подтверждена\nВот VIP ссылка:\n{link.invite_link}"
+    )
+
+    bot.send_message(message.chat.id, "Готово ✅")
+
+# ====== L1 TEST ======
+def send_to_admin(text_vip):
+    sig_id = str(len(pending_signals)+1)
+    pending_signals[sig_id] = text_vip
+
+    kb = InlineKeyboardMarkup()
+    kb.row(
+        InlineKeyboardButton("✅ OK в VIP", callback_data=f"appr:{sig_id}"),
+        InlineKeyboardButton("❌ Reject", callback_data=f"rej:{sig_id}")
+    )
+
+    bot.send_message(ADMIN_ID, text_vip, reply_markup=kb)
+
+@bot.message_handler(func=lambda m: m.text == "🧪 L1 Test Signal")
+def l1(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    text_vip = (
+        "👑 <b>ALPHA GOLD VIP SIGNAL</b>\n\n"
+        "📊 GOLD XAUUSD\n"
+        "Signal: BUY 🟢\n"
+        "TF: M5\n"
+        "Entry: TEST\n"
+        "TP1: TEST\n"
+        "TP2: TEST\n"
+        "SL: TEST\n\n"
+        "Mode: L1 TEST\n"
+        "Confidence: TEST\n"
+    )
+
+    send_to_admin(text_vip)
+
+@bot.callback_query_handler(func=lambda c: True)
+def callback(call):
+    if call.from_user.id != ADMIN_ID:
+        return
+
+    data = call.data
+
+    if data.startswith("appr:"):
+        sig_id = data.split(":")[1]
+        text = pending_signals.get(sig_id)
+
+        if text:
+            bot.send_message(VIP_CHANNEL, text)
+            bot.answer_callback_query(call.id, "Отправлено в VIP 🚀")
+
+    if data.startswith("rej:"):
+        bot.answer_callback_query(call.id, "Отклонено")
+
+# ====== START BOT ======
+print("🚀 BOT STARTED")
+bot.infinity_polling(skip_pending=True)
