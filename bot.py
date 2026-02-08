@@ -4,7 +4,7 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 # ====== ВСТАВЬ СЮДА СВОЙ BOT TOKEN ======
-BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = "8492510753:AAFBbqDMcZLrE-CHJaO2NaKSDExkMghf178"
 
 ADMIN_ID = 8394704301
 VIP_CHANNEL = -1003735072360
