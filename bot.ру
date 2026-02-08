@@ -6,7 +6,7 @@ from telebot.types import (
 )
 
 # ====== TOKEN ИЗ RAILWAY ======
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU")
 if not BOT_TOKEN:
     raise ValueError("❌ BOT_TOKEN не найден в Railway Variables")
 
