@@ -11,7 +11,7 @@ from telebot.types import (
 from flask import Flask, request, jsonify
 
 # ================== ENV / SETTINGS ==================
-BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8492510753:AAGHwAzTlKFHn_XsDtimZ98DJxXwOkb3NoU").strip()
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not set")
 
