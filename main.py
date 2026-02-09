@@ -3,7 +3,7 @@ import time
 import telebot
 
 # ================== CONFIG ==================
-BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "8492510753:AAFhTasMnqf-Mi-OhLVFrRsC74lol0_imVU").strip()
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not set (Railway Variables)")
 
