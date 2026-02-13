@@ -1,1 +1,0 @@
-✅ MONSTER PHONE запущен (iPhone)
